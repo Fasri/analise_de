@@ -10,7 +10,7 @@ COPY . /app
 RUN pip install poetry
 
 # Instalar as dependências via Poetry
-RUN poetry install --no-dev
+RUN poetry install --no-root
 
 # Expor a porta para o Streamlit
 EXPOSE 8080
