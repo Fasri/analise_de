@@ -24,7 +24,7 @@ def processar_tabela(caminho_arquivo):
     df_filtro = df[(df["Tempo na Contadoria"] > 15) & (df["Cumprimento"].str.lower() == "pendente")]
 
     # Filtrar processos com mais de 15 dias com calculista e pendentes
-    df_filtro_calculista = df[(df["Tempo com o Contador"] > 15) & (df["Cumprimento"].str.lower() == "pendente")]
+    df_filtro_calculista = df[(df["Tempo na Contadoria"] > 30) & (df["Cumprimento"].str.lower() == "pendente")]
 
     # Dividir entre com e sem calculista
     df_sem_calculista = df_filtro[df_filtro["Calculista"].isna()]
@@ -33,13 +33,13 @@ def processar_tabela(caminho_arquivo):
     # Criar DataFrame com total de processos
     df_total = pd.DataFrame({
         "Total": [len(df_sem_calculista), len(df_com_calculista)]
-    }, index=["Sem Calculista", "Com Calculista"])
+    }, index=["Sem Calculista", "Sem_Calculo"])
 
     # Salvar em BytesIO
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         df_sem_calculista.to_excel(writer, sheet_name="Sem Calculista", index=False)
-        df_com_calculista.to_excel(writer, sheet_name="Com Calculista", index=False)
+        df_filtro_calculista.to_excel(writer, sheet_name="Sem_Calculo", index=False)
         df_total.to_excel(writer, sheet_name="Resumo", index=True)
     
     output.seek(0)  # Voltar ao início do arquivo
