@@ -1,20 +1,20 @@
-FROM python:3.13.0-slim
+# Use uma imagem base com Python
+FROM python:latest
 
-# Definir o diretório de trabalho
+# Define o diretório de trabalho
 WORKDIR /app
 
-# Copiar os arquivos do projeto para o contêiner
-COPY . /app
+# Copia os arquivos para o contêiner
+COPY pyproject.toml poetry.lock ./
 
-# Instalar o Poetry
+# Instala o Poetry
 RUN pip install poetry
 
-# Instalar as dependências via Poetry
+# Instala as dependências do projeto
 RUN poetry install --no-root
 
-# Expor a porta para o Streamlit
-EXPOSE 8080
+# Copia o restante dos arquivos
+COPY . .
 
-# Rodar o Streamlit
-CMD ["streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]
-
+# Define o comando padrão para rodar o Streamlit
+CMD ["poetry", "run", "streamlit", "run", "app.py"]

@@ -52,8 +52,11 @@ def transform_tempo_real(arquivo=None):
         return data_formatada.strftime('%d/%m/%Y') if data_formatada is not pd.NaT else None
     
     df_selected['data'] = df_selected['data'].apply(formatar_data)
-    df_selected['dias'] = df_selected['dias'].astype(str).str.split(",").str[0]
-    
+    df_selected["dias"] = pd.to_numeric(df_selected["dias"], errors="coerce")
+    df_selected = df_selected.dropna(subset=["dias"])  # Remove valores NaN na coluna "dias"
+
+
+    print("TESTE")
     # Substituir nomes dos núcleos
     substituicoes = {
         **{f'{i}ª CONTADORIA DE CÁLCULOS JUDICIAIS': f'{i}ª CCJ' for i in range(1, 7)},

@@ -40,15 +40,15 @@ if opcao == "Processos em tempo real":
                     f.write(uploaded_file.getbuffer())
                 
                 st.write("📊 Processando o novo arquivo...")
-                transform_tempo_real(novo_arquivo)
+               
                 
-                with open(novo_arquivo, "rb") as file:
+                with open( transform_tempo_real(novo_arquivo), "rb") as file:
                     st.download_button("📥 Baixar Arquivo Processado", file, file_name="processado_tempo_real.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                st.success("Processo concluído! Voltando ao início...")
-                st.experimental_rerun()
+                st.success("✅ Arquivo processado com sucesso!")
+               
     else:
         st.write("🚨 O arquivo `tempo_real.xlsx` não foi encontrado!")
-
+   
 elif opcao == "Análise de processos parados":
     data_consolidacao = obter_data_arquivo(ARQUIVO_CONSOLIDACAO)
     if data_consolidacao:
