@@ -72,29 +72,29 @@ elif opcao == "Análise de processos parados":
         df["Cumprimento"] = df["Cumprimento"].astype(str).str.lower()
 
         df_filtro = df[(df["Tempo na Contadoria"] > 15) & (df["Cumprimento"] == "pendente")]
-        df_filtro_calculista = df[(df["Tempo na Contadoria"] > 30) & (df["Cumprimento"] == "pendente")]
+        df_filtro_30 = df[(df["Tempo na Contadoria"] > 30) & (df["Cumprimento"] == "pendente")]
         
         df_sem_calculista = df_filtro[df_filtro["Calculista"].isna()]
-        df_com_calculista = df_filtro_calculista[df_filtro_calculista["Calculista"].notna()]
+        df_com_calculista = df_filtro_30[df_filtro_30["Calculista"].notna()]
 
         df_total = pd.DataFrame({
-            "Total": [len(df_sem_calculista), len(df_com_calculista)]
+            "Total": [len(df_sem_calculista), len(df_filtro_30)]
         }, index=["Sem Calculista", "Com Calculista"])
 
         output = BytesIO()
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             df_sem_calculista.to_excel(writer, sheet_name="Sem Calculista", index=False)
-            df_com_calculista.to_excel(writer, sheet_name="Com Calculista", index=False)
+            df_filtro_30.to_excel(writer, sheet_name="Mais de 30", index=False)
             df_total.to_excel(writer, sheet_name="Resumo", index=True)
         output.seek(0)
-        return output, len(df_sem_calculista), len(df_com_calculista)
+        return output, len(df_sem_calculista), len(df_filtro_30)
 
     if st.button("🔄 Processar Arquivo"):
         try:
-            output, total_sem_calculista, total_com_calculista = processar_tabela(ARQUIVO_CONSOLIDACAO)
+            output, total_sem_calculista, total_mais_30 = processar_tabela(ARQUIVO_CONSOLIDACAO)
             st.subheader("🔍 Resumo dos Processos")
             st.write(f"📌 **Total de processos com mais de 15 dias sem calculista:** {total_sem_calculista}")
-            st.write(f"📌 **Total de processos atribuídos a mais de 30 dias:** {total_com_calculista}")
+            st.write(f"📌 **Total de processos com mais de 30 dias:** {total_mais_30}")
             st.download_button("📥 Baixar Arquivo Processado", data=output, file_name="processos_filtrados.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         except Exception as e:
             st.error(f"Erro ao processar o arquivo: {e}")
