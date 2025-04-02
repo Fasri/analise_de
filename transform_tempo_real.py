@@ -24,13 +24,26 @@ def transform_tempo_real(arquivo=None):
     # Carregar a planilha e excluir a primeira linha
     df = pd.read_excel(file_path)
     
-    # Selecionar colunas necessárias
+     # Carregar a planilha e excluir a primeira linha
+    df = pd.read_excel(file_path)
+
+    # Verificar o número de colunas no DataFrame
+    num_colunas = df.shape[1]
+    print(f"Número de colunas no DataFrame: {num_colunas}")
+
+    #selecionar colunas 
+
     df_selected = df[['unidade_judiciaria', 'npu', 'data_entrada_tarefa_atual', 'dias_aguardando_tarefa', 
-                      'prioridade', 'lista_prioridades', 'contadoria']]
-    
-    # Renomear colunas
-    df_selected.columns = ['vara', 'processo', 'data', 'dias', 'prioridade', 'lista_prioridades', 'nucleo']
-    df_selected = df_selected[['nucleo', 'processo', 'vara', 'data', 'dias', 'prioridade', 'lista_prioridades']]
+                    'prioridade', 'lista_prioridades', 'contadoria']]
+
+   
+
+
+    # Renomear as colunas e reorganizar a ordem
+    novas = ['vara', 'processo', 'data', 'dias', 'prioridade', 'lista_prioridades', 'nucleo']
+    df_selected.columns = novas[:len(df_selected.columns)]
+    df_selected = df_selected[['nucleo','processo', 'vara', 'data', 'dias', 'prioridade', 'lista_prioridades']]
+
     
     # Função para determinar a prioridade
     def determinar_prioridade(lista_prioridades):
@@ -38,37 +51,78 @@ def transform_tempo_real(arquivo=None):
             return "Sem prioridade"
         prioridades = lista_prioridades.split(';')
         super_prioridades = ["Pessoa idosa (80+)", "Doença terminal", "Pessoa com deficiência", "Deficiente físico"]
-        return "Super prioridade" if any(p.strip() in super_prioridades for p in prioridades) else "Prioridade Legal"
-    
+        for prioridade in prioridades:
+            if prioridade.strip() in super_prioridades:
+                return "Super prioridade"
+        return "Prioridade Legal"
+
+    # Criar a nova coluna 'prioridades'
     df_selected['prioridades'] = df_selected['lista_prioridades'].apply(determinar_prioridade)
-    df_selected = df_selected.drop(columns=['prioridade', 'lista_prioridades']).drop_duplicates(subset=['processo', 'data'])
+
+    df_selected = df_selected.drop(columns=['prioridade','lista_prioridades'])
+
+    df_selected = df_selected.drop_duplicates(subset=['processo', 'data'])
+
     
-    # Formatando a data
+    df_selected = df_selected[["nucleo","processo","vara","data","prioridades","dias"]] # Reorganizar as colunas
+    df_selected =df_selected.fillna("") # Preencher as celulas vazias com vazio
+
+    # Retirar tudo depois da virgula da coluna dias
+    df_selected["dias"] = df_selected["dias"].str.split(",").str[0]
+
+    # Função para tratar a coluna de data
     def formatar_data(data):
         if pd.isna(data):
             return None
-        primeira_data = data.split(',')[0].strip().replace("'", "")
+        primeira_data = data.split(',')[0].strip().replace("'","")
         data_formatada = pd.to_datetime(primeira_data, format='%d/%m/%Y %H:%M:%S', errors='coerce')
-        return data_formatada.strftime('%d/%m/%Y') if data_formatada is not pd.NaT else None
-    
+        if data_formatada is pd.NaT:
+            return None
+        return data_formatada.strftime('%d/%m/%Y')
+
+    # Aplicar a função de formatação de data
     df_selected['data'] = df_selected['data'].apply(formatar_data)
-    df_selected["dias"] = pd.to_numeric(df_selected["dias"], errors="coerce")
-    df_selected = df_selected.dropna(subset=["dias"])  # Remove valores NaN na coluna "dias"
 
-
-    print("TESTE")
-    # Substituir nomes dos núcleos
-    substituicoes = {
-        **{f'{i}ª CONTADORIA DE CÁLCULOS JUDICIAIS': f'{i}ª CCJ' for i in range(1, 7)},
-        **{f'{i}ª CONTADORIA DE CUSTAS': f'{i}ª CC' for i in range(1, 8)}
+    # Criar um dicionário com as substituições para Contadoria de Cálculos Judiciais
+    substituicoes_ccj = {
+        '1ª CONTADORIA DE CÁLCULOS JUDICIAIS': '1ª CCJ',
+        '2ª CONTADORIA DE CÁLCULOS JUDICIAIS': '2ª CCJ',
+        '3ª CONTADORIA DE CÁLCULOS JUDICIAIS': '3ª CCJ',
+        '4ª CONTADORIA DE CÁLCULOS JUDICIAIS': '4ª CCJ',
+        '5ª CONTADORIA DE CÁLCULOS JUDICIAIS': '5ª CCJ',
+        '6ª CONTADORIA DE CÁLCULOS JUDICIAIS': '6ª CCJ'
     }
-    df_selected['nucleo'] = df_selected['nucleo'].replace(substituicoes)
-    
-    # Criar resumo
+
+    # Criar um dicionário com as substituições para Contadoria de Custas
+    substituicoes_cc = {
+        '1ª CONTADORIA DE CUSTAS': '1ª CC',
+        '2ª CONTADORIA DE CUSTAS': '2ª CC',
+        '3ª CONTADORIA DE CUSTAS': '3ª CC',
+        '4ª CONTADORIA DE CUSTAS': '4ª CC',
+        '5ª CONTADORIA DE CUSTAS': '5ª CC',
+        '6ª CONTADORIA DE CUSTAS': '6ª CC',
+        '7ª CONTADORIA DE CUSTAS': '7ª CC'
+    }
+
+    # Combinar os dois dicionários
+    todas_substituicoes = {**substituicoes_ccj, **substituicoes_cc}
+
+    # Fazer as substituições
+    df_selected['nucleo'] = df_selected['nucleo'].replace(todas_substituicoes)
+
+    # Verificar o resultado
+    print("\nValores únicos na coluna Núcleo após as substituições:")
+    print(df_selected['nucleo'].unique())
+
+    # Obter os núcleos únicos
+    nucleos = sorted(df_selected['nucleo'].unique())
+
+    # Calcular a quantidade de processos por núcleo
     quantidade_processos = df_selected['nucleo'].value_counts().reset_index()
     quantidade_processos.columns = ['nucleo', 'quantidade']
     quantidade_processos['data'] = datetime.now().strftime('%d/%m/%Y')
-    
+    quantidade_processos = quantidade_processos[['data', 'nucleo','quantidade']]
+
     # Criar e salvar o arquivo Excel
     output_path = 'final_tempo_real.xlsx'
     with pd.ExcelWriter(output_path) as writer:
