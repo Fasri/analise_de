@@ -116,8 +116,11 @@ elif opcao == "Análise de processos parados":
             st.subheader("🔍 Resumo dos Processos")
             st.write(f"📌 **Total de processos com mais de 15 dias sem calculista:** {total_sem_calculista}")
             st.dataframe(df_sem_calculista)
+            st.bar_chart(df_sem_calculista["Núcleo"].value_counts(), use_container_width=True)            
             st.write(f"📌 **Total de processos com mais de 30 dias:** {total_mais_30}")
             st.dataframe(df_filtro_30)
+            st.scatter_chart(df_filtro_30["Núcleo"].value_counts(), use_container_width=True)
+            st.bar_chart(df_filtro_30["Núcleo"].value_counts(), use_container_width=True)         
             st.download_button("📥 Baixar Arquivo Processado", output, file_name="processado_consolidacao.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         except Exception as e:
             st.error(f"❌ Erro ao processar o arquivo: {e}")
@@ -130,4 +133,11 @@ elif opcao == "Quantidades de processos no PJE":
     df["data"] = df["data"].dt.strftime("%d/%m/%Y")
     
     st.table(df)
+
+    #grafico scatter
+    st.subheader("📈 Gráfico de Processos no PJE")
+                 
+    st.write("Gráfico de dispersão dos processos no PJE ao longo do tempo.")
+    st.scatter_chart(df, x="nucleo", y="quantidade", use_container_width=True)    
+    st.bar_chart(df, x="nucleo", y="quantidade", use_container_width=True)
  
