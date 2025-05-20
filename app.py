@@ -1,4 +1,4 @@
-import pandas as pd
+import pandas as pd 
 import streamlit as st
 import os
 from io import BytesIO
@@ -8,6 +8,8 @@ from transform_tempo_real import transform_tempo_real
 # Definir os caminhos dos arquivos
 ARQUIVO_CONSOLIDACAO = "consolidacao.xlsx"
 ARQUIVO_TEMPO_REAL = "final_tempo_real.xlsx"
+QUANTIDADE_PROCESSOS_PJE = "qunt_processos_pje.xlsx"
+
 
 def obter_data_arquivo(caminho):
     """Retorna a data de modificação do arquivo."""
@@ -16,48 +18,65 @@ def obter_data_arquivo(caminho):
         return datetime.datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y %H:%M")
     return None
 
-st.title("📊 Bem-vindo ao Sistema de Monitoramento de Processos")
-st.write("Olá! O que você quer fazer hoje?")
+# Título e descrição na página principal
+st.title("📊 Sistema de Monitoramento de Processos")
 
-# Menu inicial
-opcao = st.radio("Escolha uma opção:", ["Processos em tempo real", "Análise de processos parados"])
-
-if opcao == "Processos em tempo real":
+# Mostrar informações dos arquivos logo de início
+st.subheader("📁 Arquivos Disponíveis")
+col1, col2 , col3 = st.columns(3)
+with col1:
     data_tempo_real = obter_data_arquivo(ARQUIVO_TEMPO_REAL)
-    
+    st.markdown(f"**`{ARQUIVO_TEMPO_REAL}`**: {data_tempo_real or 'Arquivo não encontrado'}")
+
+with col2:
+    data_consolidacao = obter_data_arquivo(ARQUIVO_CONSOLIDACAO)
+    st.markdown(f"**`{ARQUIVO_CONSOLIDACAO}`**: {data_consolidacao or 'Arquivo não encontrado'}")
+
+with col3:
+    data_quantidade = obter_data_arquivo(QUANTIDADE_PROCESSOS_PJE)
+    st.markdown(f"**`{QUANTIDADE_PROCESSOS_PJE}`**: {data_quantidade or 'Arquivo não encontrado'}")
+
+# Sidebar com menu
+st.sidebar.title("📌 MENU PRINCIPAL")
+opcao = st.sidebar.radio("Escolha uma opção:", ["Processos em tempo real", "Análise de processos parados", "Quantidades de processos no PJE", "Notificação de processos"])
+
+# --- Processos em tempo real ---
+if opcao == "Processos em tempo real":
+    st.subheader("📈 Processos em Tempo Real")
+
     if data_tempo_real:
-        st.write(f"📂 O arquivo `tempo_real.xlsx` foi atualizado em: **{data_tempo_real}**")
-        escolha = st.radio("Deseja baixar o arquivo ou fazer upload de um novo?", ["Baixar", "Fazer Upload"])
-        
+        st.write(f"🕒 Última atualização: **{data_tempo_real}**")
+        escolha = st.radio("O que deseja fazer?", ["Baixar", "Fazer Upload"])
+
         if escolha == "Baixar":
             with open(ARQUIVO_TEMPO_REAL, "rb") as file:
                 st.download_button("📥 Baixar Arquivo", file, file_name="tempo_real.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         else:
-            uploaded_file = st.file_uploader("Envie um novo arquivo XLSX", type=["xlsx"])
+            uploaded_file = st.file_uploader("📤 Envie um novo arquivo XLSX", type=["xlsx"])
             if uploaded_file is not None:
                 novo_arquivo = "novo_tempo_real.xlsx"
                 with open(novo_arquivo, "wb") as f:
                     f.write(uploaded_file.getbuffer())
                 
-                st.write("📊 Processando o novo arquivo...")
-               
-                
-                with open( transform_tempo_real(novo_arquivo), "rb") as file:
-                    st.download_button("📥 Baixar Arquivo Processado", file, file_name="processado_tempo_real.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                st.success("✅ Arquivo processado com sucesso!")
-               
+                st.info("📊 Processando o novo arquivo...")
+                try:
+                    processado_path = transform_tempo_real(novo_arquivo)
+                    with open(processado_path, "rb") as file:
+                        st.download_button("📥 Baixar Arquivo Processado", file, file_name="processado_tempo_real.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    st.success("✅ Arquivo processado com sucesso!")
+                except Exception as e:
+                    st.error(f"❌ Erro ao processar o arquivo: {e}")
     else:
-        st.write("🚨 O arquivo `tempo_real.xlsx` não foi encontrado!")
-   
+        st.error("🚨 O arquivo `tempo_real.xlsx` não foi encontrado!")
+
+# --- Análise de processos parados ---
 elif opcao == "Análise de processos parados":
-    data_consolidacao = obter_data_arquivo(ARQUIVO_CONSOLIDACAO)
-    if data_consolidacao:
-        st.write(f"📂 O arquivo `consolidacao.xlsx` foi atualizado em: **{data_consolidacao}**")
-    else:
-        st.write("🚨 O arquivo `consolidacao.xlsx` não foi encontrado!")
+    st.subheader("📉 Análise de Processos Parados")
+
+    if not data_consolidacao:
+        st.error("🚨 O arquivo `consolidacao.xlsx` não foi encontrado!")
         st.stop()
 
-    # Função para processar a tabela
     def processar_tabela(caminho_arquivo):
         df = pd.read_excel(caminho_arquivo)
 
@@ -73,9 +92,11 @@ elif opcao == "Análise de processos parados":
 
         df_filtro = df[(df["Tempo na Contadoria"] > 15) & (df["Cumprimento"] == "pendente")]
         df_filtro_30 = df[(df["Tempo na Contadoria"] > 30) & (df["Cumprimento"] == "pendente")]
-        
+
         df_sem_calculista = df_filtro[df_filtro["Calculista"].isna()]
-        df_com_calculista = df_filtro_30[df_filtro_30["Calculista"].notna()]
+        df_sem_calculista = df_sem_calculista[["Núcleo", "Posição Geral","Posição Prioridade", "Número do processo", "Vara", "Data Remessa Contadoria", "Prioridade", "Tempo na Contadoria"]]
+
+        df_filtro_30 = df_filtro_30[["Núcleo", "Posição Geral","Posição Prioridade", "Número do processo", "Vara", "Data Remessa Contadoria", "Prioridade", "Calculista", "Tempo na Contadoria", "Tempo com o Contador"]]
 
         df_total = pd.DataFrame({
             "Total": [len(df_sem_calculista), len(df_filtro_30)]
@@ -87,14 +108,26 @@ elif opcao == "Análise de processos parados":
             df_filtro_30.to_excel(writer, sheet_name="Mais de 30", index=False)
             df_total.to_excel(writer, sheet_name="Resumo", index=True)
         output.seek(0)
-        return output, len(df_sem_calculista), len(df_filtro_30)
+        return output, len(df_sem_calculista), len(df_filtro_30), df_sem_calculista, df_filtro_30
 
     if st.button("🔄 Processar Arquivo"):
         try:
-            output, total_sem_calculista, total_mais_30 = processar_tabela(ARQUIVO_CONSOLIDACAO)
+            output, total_sem_calculista, total_mais_30, df_sem_calculista, df_filtro_30 = processar_tabela(ARQUIVO_CONSOLIDACAO)
             st.subheader("🔍 Resumo dos Processos")
             st.write(f"📌 **Total de processos com mais de 15 dias sem calculista:** {total_sem_calculista}")
+            st.dataframe(df_sem_calculista)
             st.write(f"📌 **Total de processos com mais de 30 dias:** {total_mais_30}")
-            st.download_button("📥 Baixar Arquivo Processado", data=output, file_name="processos_filtrados.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.dataframe(df_filtro_30)
+            st.download_button("📥 Baixar Arquivo Processado", output, file_name="processado_consolidacao.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         except Exception as e:
-            st.error(f"Erro ao processar o arquivo: {e}")
+            st.error(f"❌ Erro ao processar o arquivo: {e}")
+
+# --- Quantidades de processos no PJE ---
+elif opcao == "Quantidades de processos no PJE":
+    st.subheader("📊 Quantidades de Processos no PJE")
+    df = pd.read_excel("qunt_processos_pje.xlsx")
+    df["data"] = pd.to_datetime(df["data"])
+    df["data"] = df["data"].dt.strftime("%d/%m/%Y")
+    
+    st.table(df)
+ 
