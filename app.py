@@ -19,10 +19,19 @@ def obter_data_arquivo(caminho):
     return None
 
 # Título e descrição na página principal
-st.title("📊 Sistema de Monitoramento de Processos")
+col1, col2 = st.columns([2, 4])  # Proporção entre imagem e texto
+
+with col1:
+    st.image("image/tj-pe-tribunal-de-justica-do-estado-de-pernambuco.png", width=800)
+
+with col2:
+    st.title(" Central da Contadoria Remota do TJPE")
+
+st.subheader("📊 Sistema de monitoramento de processos")    
+
 
 # Mostrar informações dos arquivos logo de início
-st.subheader("📁 Arquivos Disponíveis")
+st.write("📁 Arquivos Disponíveis")
 col1, col2 , col3 = st.columns(3)
 with col1:
     data_tempo_real = obter_data_arquivo(ARQUIVO_TEMPO_REAL)
