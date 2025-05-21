@@ -137,7 +137,7 @@ elif opcao == "Análise de processos parados":
 # --- Quantidades de processos no PJE ---
 elif opcao == "Quantidades de processos no PJE":
     st.subheader("📊 Quantidades de Processos no PJE")
-    df = pd.read_excel("qunt_processos_pje.xlsx")
+    df = pd.read_excel("quantidade_processos.xlsx")
     df["data"] = pd.to_datetime(df["data"])
     df["data"] = df["data"].dt.strftime("%d/%m/%Y")
     
