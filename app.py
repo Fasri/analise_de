@@ -6,9 +6,9 @@ import datetime
 from transform_tempo_real import transform_tempo_real
 
 # Definir os caminhos dos arquivos
-ARQUIVO_CONSOLIDACAO = "consolidacao.xlsx"
-ARQUIVO_TEMPO_REAL = "final_tempo_real.xlsx"
-QUANTIDADE_PROCESSOS_PJE = "qunt_processos_pje.xlsx"
+ARQUIVO_CONSOLIDACAO = "data\consolidacao.xlsx"
+ARQUIVO_TEMPO_REAL = "data\final_tempo_real.xlsx"
+QUANTIDADE_PROCESSOS_PJE = "data\quantidade_processos.xlsx"
 
 
 def obter_data_arquivo(caminho):
@@ -59,7 +59,7 @@ if opcao == "Processos em tempo real":
 
         if escolha == "Baixar":
             with open(ARQUIVO_TEMPO_REAL, "rb") as file:
-                st.download_button("📥 Baixar Arquivo", file, file_name="tempo_real.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                st.download_button("📥 Baixar Arquivo", file, file_name="data\final_tempo_real.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         else:
             uploaded_file = st.file_uploader("📤 Envie um novo arquivo XLSX", type=["xlsx"])
             if uploaded_file is not None:
@@ -137,7 +137,7 @@ elif opcao == "Análise de processos parados":
 # --- Quantidades de processos no PJE ---
 elif opcao == "Quantidades de processos no PJE":
     st.subheader("📊 Quantidades de Processos no PJE")
-    df = pd.read_excel("quantidade_processos.xlsx")
+    df = pd.read_excel("data\quantidade_processos.xlsx")
     df["data"] = pd.to_datetime(df["data"])
     df["data"] = df["data"].dt.strftime("%d/%m/%Y")
     
