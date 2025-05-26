@@ -7,7 +7,7 @@ from transform_tempo_real import transform_tempo_real
 
 # Definir os caminhos dos arquivos
 ARQUIVO_CONSOLIDACAO = "data\consolidacao.xlsx"
-ARQUIVO_TEMPO_REAL = "data\final_tempo_real.xlsx"
+ARQUIVO_TEMPO_REAL = "final_tempo_real.xlsx"
 QUANTIDADE_PROCESSOS_PJE = "data\quantidade_processos.xlsx"
 
 
@@ -59,7 +59,7 @@ if opcao == "Processos em tempo real":
 
         if escolha == "Baixar":
             with open(ARQUIVO_TEMPO_REAL, "rb") as file:
-                st.download_button("📥 Baixar Arquivo", file, file_name="data\final_tempo_real.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                st.download_button("📥 Baixar Arquivo", file, file_name=r"data\final_tempo_real.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         else:
             uploaded_file = st.file_uploader("📤 Envie um novo arquivo XLSX", type=["xlsx"])
             if uploaded_file is not None:
