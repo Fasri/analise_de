@@ -34,7 +34,7 @@ def transform_tempo_real(arquivo=None):
     #selecionar colunas 
 
     df_selected = df[['unidade_judiciaria', 'npu', 'data_entrada_tarefa_atual', 'dias_aguardando_tarefa', 
-                    'prioridade', 'lista_prioridades', 'contadoria']]
+                    'prioridade', 'lista_prioridades', 'contadoria_partidor']]
 
    
 
@@ -90,7 +90,8 @@ def transform_tempo_real(arquivo=None):
         '3ª CONTADORIA DE CÁLCULOS JUDICIAIS': '3ª CCJ',
         '4ª CONTADORIA DE CÁLCULOS JUDICIAIS': '4ª CCJ',
         '5ª CONTADORIA DE CÁLCULOS JUDICIAIS': '5ª CCJ',
-        '6ª CONTADORIA DE CÁLCULOS JUDICIAIS': '6ª CCJ'
+        '6ª CONTADORIA DE CÁLCULOS JUDICIAIS': '6ª CCJ',
+        '': 'PARTIDOR'
     }
 
     # Criar um dicionário com as substituições para Contadoria de Custas
