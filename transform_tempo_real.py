@@ -50,7 +50,7 @@ def transform_tempo_real(arquivo=None):
         if pd.isna(lista_prioridades):
             return "Sem prioridade"
         prioridades = lista_prioridades.split(';')
-        super_prioridades = ["Pessoa idosa (80+)", "Doença terminal", "Pessoa com deficiência", "Deficiente físico", "Deficiente Físico"]
+        super_prioridades = ["Pessoa idosa (80+)", "Doença terminal", "Pessoa com deficiência", "Deficiente físico", "Deficiente Físico", "Precatório alimentar - pessoa idosa (80+)"]
         for prioridade in prioridades:
             if prioridade.strip() in super_prioridades:
                 return "Super prioridade"
