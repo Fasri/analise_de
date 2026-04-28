@@ -67,14 +67,17 @@ def transform_tempo_real(arquivo=None):
     df_selected = df_selected[["nucleo","processo","vara","data","prioridades","dias"]] # Reorganizar as colunas
     df_selected =df_selected.fillna("") # Preencher as celulas vazias com vazio
 
-    # Retirar tudo depois da virgula da coluna dias
-    df_selected["dias"] = df_selected["dias"].str.split(",").str[0]
+    # Retirar tudo depois do pipe ou virgula da coluna dias
+    df_selected["dias"] = df_selected["dias"].astype(str).str.split("|").str[0].str.split(",").str[0].str.strip()
 
     # Função para tratar a coluna de data
     def formatar_data(data):
         if pd.isna(data):
             return None
-        primeira_data = data.split(',')[0].strip().replace("'","")
+        
+        # Pega a primeira data caso haja múltiplas separadas por pipe '|' ou vírgula ','
+        primeira_data = str(data).split('|')[0].split(',')[0].strip().replace("'", "")
+        
         data_formatada = pd.to_datetime(primeira_data, format='%d/%m/%Y %H:%M:%S', errors='coerce')
         if data_formatada is pd.NaT:
             return None
